@@ -7,7 +7,7 @@ The optimizations for this to work appear as follows:
 
 Inside the return function of the Provider, I useMemo:
 
-```
+```javascript
 const value = React.useMemo(() => {
         return {
             state, ResetAll, handleSlider
@@ -17,7 +17,7 @@ const value = React.useMemo(() => {
 That is so the values exported don't trigger re-renders or reconcilations.
 
 The next is inside the GlobalState > there the socket.io verbs are started on the intial useEffect, with [] to indication only on inital strapping of the component.
-```
+```javascript
 useEffect(() => {
         console.log(`🌎...Global State initalized!`);
 
@@ -30,7 +30,7 @@ useEffect(() => {
     }, []);
 ```
 Then what I did was match my reducer pattern, and my output from the Socket.io server to the same pattern, then inside the reducer:
-```
+```javascript
 export default function globalStateReducer(state, action) {
 
     switch (action.type) {
@@ -54,8 +54,8 @@ Therefor anything that comes out of the server, goes directly into the useReduce
 
 This allows for *very* highspeed updates to occur both inside the context and all the way out to components. 
 If you wish to see the speeds:
-
-```server\server.js
+server\server.js
+```javascript
 setInterval(() => {
     server.emit("action", { type: 'heartbeat', payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 } });
     serverHB++;
