@@ -3,7 +3,7 @@ import globalStateReducer from './GlobalStateReducer';
 
 //Socket
 import io from 'socket.io-client';
-let socket = io("http://10.0.0.40:3666");
+let socket = io("http://localhost:3666");
 
 //Context
 export const GlobalStateContext = React.createContext();
