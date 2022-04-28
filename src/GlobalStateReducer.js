@@ -10,7 +10,7 @@ export default function globalStateReducer(state, action) {
         case 'updateProgress':
             return { ...state, prog: action.payload };
         case 'progMaster':
-            console.log(`Your Prog Master!`);
+            console.log(`Your web-client has the Progress Bar control.`);
             return { ...state, isProgMaster: true };
         default:
             return state;

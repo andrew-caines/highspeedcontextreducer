@@ -1,31 +1,42 @@
-const io = require("socket.io");
+const http = require("http");
+const Server = require("socket.io");
+const httpServer = http.createServer();
+const io = new Server.Server(httpServer, {
+    cors: {
+        origin: "http://localhost:3000",
+        credentials: true
+    }
+});
 const PORT = 3666;
-const server = io.listen(PORT);
 let usersConnected = 0;
 
 let serverHB = 0;
 setInterval(() => {
-    server.emit("action", { type: 'heartbeat', payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 } });
+    io.emit("action", { type: 'heartbeat', payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 } });
     serverHB++;
-}, 333);
+}, 150);
 
-server.on("connection", (socket) => {
+io.on("connection", (socket) => {
     if (usersConnected === 0) {
-        server.emit("action", { type: 'progMaster', payload: true });
+        io.emit("action", { type: 'progMaster', payload: true });
+    } else {
+        usersConnected++;
     }
-    usersConnected++;
+
     console.log(`User Connected: ${usersConnected} users online.`);
-    server.emit("action", { type: 'userCount', payload: usersConnected });
+    io.emit("action", { type: 'userCount', payload: usersConnected });
 
     socket.on('progUpdate', (data) => {
-        server.emit("action", { type: 'updateProgress', payload: data.value });
+        io.emit("action", { type: 'updateProgress', payload: data.value });
     });
 
     socket.on('disconnect', (data) => {
         usersConnected--;
-        server.emit("action", { type: 'userCount', payload: usersConnected });
+        io.emit("action", { type: 'userCount', payload: usersConnected });
         console.log(`User Disconnected: ${usersConnected} users online.`);
     });
 });
+
+httpServer.listen(PORT);
 console.log(`Socket Server Running on Port:${PORT}`);
 
