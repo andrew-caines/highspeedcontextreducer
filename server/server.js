@@ -7,7 +7,7 @@ let serverHB = 0;
 setInterval(() => {
     server.emit("action", { type: 'heartbeat', payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 } });
     serverHB++;
-}, 105);
+}, 333);
 
 server.on("connection", (socket) => {
     if (usersConnected === 0) {
