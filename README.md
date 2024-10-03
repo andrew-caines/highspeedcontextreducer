@@ -1,50 +1,79 @@
-# React + TypeScript + Vite
+## This is a quick demo of how to update a global context object via socket.io @ high speed.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+I created this demo, because I was not able to find any examples of high speed context use in the wild.
+Most sites recommend that you avoid using context for anything that is updated @ highspeed.
 
-Currently, two official plugins are available:
+The optimizations for this to work appear as follows:
+Inside the return function of the Provider, I useMemo:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```typescript
+const value = React.useMemo(() => {
+  return {
+    state,
+    ResetAll,
+    handleSlider,
+  };
+}, [state]);
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+That is so the values exported don't trigger re-renders or reconcilations.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```javascript
+useEffect(() => {
+  console.log(`🌎...Global State initalized!`);
+  socket.on("action", (data) => {
+    dispatch(data);
+  });
+  socket.on("progMaster", (data) => {
+    dispatch(data);
+  });
+}, []);
 ```
+
+```typescript
+import { ActionType, ReducerPayload } from "./types";
+import { GlobalStateType } from "./types";
+
+export default function globalStateReducer(state: GlobalStateType, action: ReducerPayload) {
+  switch (action.type) {
+    case ActionType.reset:
+      return action.payload;
+    case ActionType.heartbeat:
+      return {
+        ...state,
+        heartBeats: state.heartBeats + 1,
+        serverHB: action.payload.serverHB,
+        currentAlert: action.payload.alert,
+      };
+    case ActionType.userCount:
+      return { ...state, usersOnline: action.payload };
+    case ActionType.updateProgressBar:
+      return { ...state, prog: action.payload };
+    case ActionType.programMaster:
+      console.info(`Your web-client has the Progress Bar control.`);
+      return { ...state, isProgMaster: true };
+    default:
+      return state;
+  }
+}
+```
+
+Therefor anything that comes out of the server, goes directly into the useReducer hook, which has optizmations wrapped around it aswell (from the library)
+
+This allows for _very_ highspeed updates to occur both inside the context and all the way out to components.
+If you wish to see the speeds:
+server\server.js
+
+```javascript
+setInterval(() => {
+  server.emit("action", {
+    type: "heartbeat",
+    payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 },
+  });
+  serverHB++;
+}, 10); //Change this 10 to whatever ms delay you wish to see
+```
+
+Just edit the call back speed, even at 1 chrome can keep up, Firefox in my testing cannot.
+Thanks,
+Andrew

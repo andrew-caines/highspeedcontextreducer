@@ -1,18 +1,18 @@
-import { ReducerPayload } from "./types";
+import { ActionType, ReducerPayload } from "./types";
 import { GlobalStateType } from "./types";
-export default function globalStateReducer(state: GlobalStateType, action: ReducerPayload) {
 
+export default function globalStateReducer(state: GlobalStateType, action: ReducerPayload) {
     switch (action.type) {
-        case 'reset':
+        case ActionType.reset:
             return action.payload;
-        case 'heartbeat':
+        case ActionType.heartbeat:
             return { ...state, heartBeats: state.heartBeats + 1, serverHB: action.payload.serverHB, currentAlert: action.payload.alert };
-        case 'userCount':
+        case ActionType.userCount:
             return { ...state, usersOnline: action.payload };
-        case 'updateProgress':
+        case ActionType.updateProgressBar:
             return { ...state, prog: action.payload };
-        case 'progMaster':
-            console.log(`Your web-client has the Progress Bar control.`);
+        case ActionType.programMaster:
+            console.info(`Your web-client has the Progress Bar control.`);
             return { ...state, isProgMaster: true };
         default:
             return state;
