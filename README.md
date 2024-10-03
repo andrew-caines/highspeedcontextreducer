@@ -64,14 +64,47 @@ This allows for _very_ highspeed updates to occur both inside the context and al
 If you wish to see the speeds:
 server\server.js
 
-```javascript
+```typescript
+//MARK: Types
+type HeartbeatPayload = {
+  serverHB: number;
+  alert: number;
+};
+
+type ProgramMaster = true;
+type ProgramUpdate = {
+  value: number;
+};
+
+enum MessageType {
+  usercount = "userCount",
+  heartbeat = "heartbeat",
+  updateProgressBar = "updateProgress",
+  programMaster = "progMaster",
+  programUpdate = "progUpdate",
+  disconnect = "disconnect",
+}
+interface Action<T> {
+  type: MessageType;
+  payload: T;
+}
+
+type PayloadMap = {
+  [MessageType.usercount]: number;
+  [MessageType.heartbeat]: HeartbeatPayload;
+  [MessageType.programMaster]: ProgramMaster;
+  [MessageType.programUpdate]: ProgramUpdate;
+  [MessageType.updateProgressBar]: number;
+  [MessageType.disconnect]: undefined;
+};
+
 setInterval(() => {
-  server.emit("action", {
-    type: "heartbeat",
-    payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 },
+  emitAction(MessageType.heartbeat, {
+    serverHB: serverHB,
+    alert: Math.floor(Math.random() * 8) + 1,
   });
   serverHB++;
-}, 10); //Change this 10 to whatever ms delay you wish to see
+}, 150); //Change this 150 to whatever ms delay you wish to see
 ```
 
 Just edit the call back speed, even at 1 chrome can keep up, Firefox in my testing cannot.
