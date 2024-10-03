@@ -1,9 +1,9 @@
 import http from "http";
-import Server from "socket.io";
+import { Server } from "socket.io";
 const httpServer = http.createServer();
-const io = new Server.Server(httpServer, {
+const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "http://localhost:5173",
         credentials: true
     }
 });

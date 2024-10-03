@@ -1,67 +1,50 @@
-## This is a quick demo of how to update a global context object via socket.io @ high speed.
+# React + TypeScript + Vite
 
-I created this demo, because I was not able to find any examples of high speed context use in the wild.
-Most sites recommend that you avoid using context for anything that is updated @ highspeed.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-The optimizations for this to work appear as follows:
+Currently, two official plugins are available:
 
-Inside the return function of the Provider, I useMemo:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-```javascript
-const value = React.useMemo(() => {
-        return {
-            state, ResetAll, handleSlider
-        }
-    }, [state]);
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
 ```
-That is so the values exported don't trigger re-renders or reconcilations.
 
-The next is inside the GlobalState > there the socket.io verbs are started on the intial useEffect, with [] to indication only on inital strapping of the component.
-```javascript
-useEffect(() => {
-        console.log(`🌎...Global State initalized!`);
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-        socket.on("action", (data) => {
-            dispatch(data);
-        });
-        socket.on("progMaster", (data) => {
-            dispatch(data);
-        });
-    }, []);
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
+
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
 ```
-Then what I did was match my reducer pattern, and my output from the Socket.io server to the same pattern, then inside the reducer:
-```javascript
-export default function globalStateReducer(state, action) {
-
-    switch (action.type) {
-        case 'reset':
-            return action.payload;
-        case 'heartbeat':
-            return { ...state, heartBeats: state.heartBeats + 1, serverHB: action.payload.serverHB, currentAlert: action.payload.alert };
-        case 'userCount':
-            return { ...state, usersOnline: action.payload };
-        case 'updateProgress':
-            return { ...state, prog: action.payload };
-        case 'progMaster':
-            console.log(`Your Prog Master!`);
-            return { ...state, isProgMaster: true };
-        default:
-            return state;
-    }
-}
-```
-Therefor anything that comes out of the server, goes directly into the useReducer hook, which has optizmations wrapped around it aswell (from the library)
-
-This allows for *very* highspeed updates to occur both inside the context and all the way out to components. 
-If you wish to see the speeds:
-server\server.js
-```javascript
-setInterval(() => {
-    server.emit("action", { type: 'heartbeat', payload: { serverHB: serverHB, alert: Math.floor(Math.random() * 8) + 1 } });
-    serverHB++;
-}, 10); //Change this 10 to whatever ms delay you wish to see
-```
-Just edit the call back speed, even at 1 chrome can keep up, Firefox in my testing cannot.
-
-Thanks,
-Andrew
